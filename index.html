@@ -19,18 +19,7 @@
       <h1 class="text-xl font-bold text-cyan-400 flex items-center gap-2">
         <span>🔊</span> ทดสอบสังเคราะห์เสียง (TTS)
       </h1>
-      <span id="modelBadge" class="text-xs bg-cyan-950 text-cyan-400 border border-cyan-800 px-2 py-1 rounded">Auto Detect</span>
-    </div>
-
-    <!-- API Key Input -->
-    <div class="flex flex-col gap-1">
-      <label class="text-xs text-slate-400">Gemini API Key:</label>
-      <input 
-        type="password" 
-        id="apiKeyInput" 
-        placeholder="วาง Google AI Studio API Key ที่นี่..." 
-        class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-cyan-500 transition"
-      />
+      <span class="text-xs bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-1 rounded">Python Local Backend</span>
     </div>
 
     <!-- Text Input Area -->
@@ -39,7 +28,7 @@
       <textarea 
         id="textInput" 
         rows="3" 
-        placeholder="พิมพ์คำหรือประโยค เช่น กา, ข่า, ค้า..." 
+        placeholder="พิมพ์คำ เช่น กา, ข่า, ค้า..." 
         class="bg-slate-900 border border-slate-700 rounded-lg p-3 text-base text-slate-100 focus:outline-none focus:border-cyan-500 transition resize-none"
       >กา</textarea>
     </div>
@@ -59,12 +48,12 @@
         onclick="handleAnalyze()" 
         class="flex items-center justify-center gap-2 bg-cyan-600 hover:bg-cyan-500 active:scale-95 text-white font-semibold py-2.5 px-4 rounded-xl shadow-lg transition"
       >
-        <span>🤖</span> AI วิเคราะห์คำ
+        <span>⚡</span> วิเคราะห์สัทศาสตร์
       </button>
     </div>
 
-    <!-- Result / Status Box -->
-    <div id="resBox" class="hidden rounded-xl p-4 text-sm transition-all border leading-relaxed overflow-x-auto"></div>
+    <!-- Result Box -->
+    <div id="resBox" class="hidden rounded-xl p-4 text-sm transition-all border leading-relaxed bg-slate-900 border-cyan-800 text-slate-100"></div>
 
     <!-- Close Button -->
     <button 
@@ -77,90 +66,42 @@
   </div>
 
   <script>
-    // 1. บันทึกและดึง API Key จาก LocalStorage
-    const apiKeyInput = document.getElementById('apiKeyInput');
-    const savedKey = localStorage.getItem('GEMINI_API_KEY');
-    if (savedKey) apiKeyInput.value = savedKey;
-
-    apiKeyInput.addEventListener('input', (e) => {
-      localStorage.setItem('GEMINI_API_KEY', e.target.value.trim());
-    });
-
-    // 2. วิเคราะห์สัทศาสตร์ด้วย Gemini พร้อมระบบ Auto-Fallback Endpoint
+    // เรียกใช้ Python Backend (Flask) ที่รันบนพอร์ต 8080
     async function handleAnalyze() {
       const text = document.getElementById('textInput').value.trim();
-      const key = apiKeyInput.value.trim();
-      const badge = document.getElementById('modelBadge');
+      const resBox = document.getElementById('resBox');
+      const btnClose = document.getElementById('btnClose');
 
       if (!text) {
         showStatus('กรุณาพิมพ์ข้อความที่ต้องการวิเคราะห์', 'error');
         return;
       }
-      if (!key) {
-        showStatus('กรุณากรอก Gemini API Key ก่อนเริ่มวิเคราะห์', 'error');
-        return;
+
+      showStatus('กำลังประมวลผลผ่าน Python Engine...', 'loading');
+
+      try {
+        const response = await fetch(`http://127.0.0.1:8080/analyze?text=${encodeURIComponent(text)}`);
+        const data = await response.json();
+
+        const resultHtml = `
+          <div class="space-y-1">
+            <p><strong>คำที่วิเคราะห์:</strong> ${data.word}</p>
+            <p><strong>ไตรยางศ์:</strong> <span class="text-cyan-400 font-semibold">${data.class}</span></p>
+            <p><strong>Target Pitch:</strong> <span class="text-emerald-400 font-mono">${data.pitch_target}</span></p>
+          </div>
+        `;
+        showStatus(resultHtml, 'success');
+      } catch (err) {
+        showStatus(`❌ ข้อผิดพลาด: ไม่สามารถเชื่อมต่อกับ Python Server ที่พอร์ต 8080 ได้ (${err.message})`, 'error');
       }
-
-      showStatus('กำลังเชื่อมต่อ AI เพื่อวิเคราะห์ข้อมูลทางสัทศาสตร์...', 'loading');
-
-      const prompt = `วิเคราะห์โครงสร้างทางสัทศาสตร์ภาษาไทยสำหรับงานวิจัย TTS:
-คำ/ประโยค: "${text}"
-กรุณาระบุรายละเอียดเป็นข้อๆ:
-1. ไตรยางศ์ (อักษร สูง/กลาง/ต่ำ)
-2. โครงสร้างคำเป็น/คำตาย และความยาวสระ
-3. เสียงวรรณยุกต์ (สามัญ/เอก/โท/ตรี/จัตวา)
-4. การประมาณค่า Target Pitch Contour (Hz หรือ Semitone)`;
-
-      // ลำดับ URL และ Model ที่ระบบจะทดสอบเชื่อมต่ออัตโนมัติ
-      const candidateEndpoints = [
-        { name: "v1beta/gemini-1.5-flash-latest", url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent" },
-        { name: "v1/gemini-1.5-flash", url: "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent" },
-        { name: "v1beta/gemini-1.5-flash", url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent" },
-        { name: "v1beta/gemini-pro", url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent" },
-        { name: "v1beta/gemini-1.5-pro-latest", url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent" }
-      ];
-
-      let lastError = null;
-
-      for (const item of candidateEndpoints) {
-        try {
-          const endpointUrl = `${item.url}?key=${key}`;
-          const response = await fetch(endpointUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }]
-            })
-          });
-
-          const data = await response.json();
-
-          if (data.error) {
-            lastError = data.error.message;
-            continue; // ข้ามไปลอง Endpoint ตัวถัดไป
-          }
-
-          const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (reply) {
-            badge.innerText = item.name.split('/')[1];
-            showStatus(reply.replace(/\n/g, '<br>'), 'success');
-            return;
-          }
-        } catch (err) {
-          lastError = err.message;
-        }
-      }
-
-      showStatus(`❌ ข้อผิดพลาด: ${lastError || 'ไม่สามารถเชื่อมต่อได้ ตรวจสอบความถูกต้องของ API Key'}`, 'error');
     }
 
-    // 3. จำลองเสียงสัญญาณพาหะอ้างอิง (Carrier Wave F0)
+    // Web Audio Synthesizer
     function playCarrierTone() {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
 
-      // ความถี่ F0 อ้างอิงเสียงพูดปกติ (ประมาณ C4 = 261.63 Hz)
       osc.type = 'sawtooth';
       osc.frequency.setValueAtTime(261.63, audioCtx.currentTime);
 
@@ -174,12 +115,11 @@
       osc.stop(audioCtx.currentTime + 0.6);
     }
 
-    // 4. แสดงผลลัพธ์บน UI
     function showStatus(htmlContent, type) {
       const resBox = document.getElementById('resBox');
       const btnClose = document.getElementById('btnClose');
       
-      resBox.className = "rounded-xl p-4 text-sm transition-all border leading-relaxed overflow-x-auto";
+      resBox.className = "rounded-xl p-4 text-sm transition-all border leading-relaxed";
 
       if (type === 'error') {
         resBox.classList.add('bg-red-950/80', 'border-red-800', 'text-red-200');
