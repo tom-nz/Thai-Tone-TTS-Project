@@ -3,79 +3,87 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Thai Tone TTS Research & Analysis</title>
+  <title>Thai Tone TTS & Musical Staff</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- VexFlow Library -->
+  <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Sarabun', sans-serif; }
+    #staffCanvas svg {
+      margin: 0 auto;
+      background: #0f172a;
+      border-radius: 0.75rem;
+    }
   </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-4">
 
-  <div class="w-full max-w-lg bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl p-6 flex flex-col gap-4">
+  <div class="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl p-6 flex flex-col gap-5">
     
     <!-- Header -->
-    <div class="flex items-center justify-between border-b border-slate-700 pb-3">
-      <h1 class="text-xl font-bold text-cyan-400 flex items-center gap-2">
-        <span>🔊</span> ทดสอบสังเคราะห์เสียง (TTS)
-      </h1>
-      <span class="text-xs bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-1 rounded">Offline Engine</span>
+    <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+      <div class="flex items-center gap-2.5">
+        <span class="text-2xl">🎼</span>
+        <h1 class="text-xl font-bold text-cyan-400">Thai Tone to Musical Staff</h1>
+      </div>
+      <span class="text-xs bg-cyan-950/80 text-cyan-400 border border-cyan-800/60 px-2.5 py-1 rounded-full font-mono">VexFlow + TTS</span>
     </div>
 
     <!-- Text Input Area -->
-    <div class="flex flex-col gap-1">
-      <label class="text-xs text-slate-400">ข้อความภาษาไทยที่ต้องการทดสอบ:</label>
-      <textarea 
-        id="textInput" 
-        rows="3" 
-        placeholder="พิมพ์คำ เช่น กา, ข่า, ค้า, ปา..." 
-        class="bg-slate-900 border border-slate-700 rounded-lg p-3 text-base text-slate-100 focus:outline-none focus:border-cyan-500 transition resize-none"
-      >กา</textarea>
+    <div class="flex flex-col gap-1.5">
+      <label class="text-xs text-slate-400 font-medium">ข้อความหรือคำภาษาไทยที่ต้องการวิเคราะห์และผันเสียง:</label>
+      <div class="flex gap-2">
+        <input 
+          type="text" 
+          id="textInput" 
+          placeholder="พิมพ์คำ เช่น กา, ข่า, ค้า, ป่า..." 
+          class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-base text-slate-100 focus:outline-none focus:border-cyan-500 transition"
+          value="กา"
+        />
+        <button 
+          onclick="handleAnalyze()" 
+          class="bg-cyan-600 hover:bg-cyan-500 active:scale-95 text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg transition flex items-center gap-1.5"
+        >
+          <span>⚡</span> วิเคราะห์
+        </button>
+      </div>
     </div>
 
-    <!-- Action Buttons -->
-    <div class="grid grid-cols-2 gap-3">
-      <button 
-        id="btnPlay" 
-        onclick="playToneSound()" 
-        class="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-semibold py-2.5 px-4 rounded-xl shadow-lg transition"
-      >
-        <span>📢</span> กดฟังเสียง
-      </button>
+    <!-- Analysis Details Box -->
+    <div id="resBox" class="hidden rounded-2xl p-4 text-sm border leading-relaxed bg-slate-950 border-slate-800"></div>
 
-      <button 
-        id="btnAnalyze" 
-        onclick="handleAnalyze()" 
-        class="flex items-center justify-center gap-2 bg-cyan-600 hover:bg-cyan-500 active:scale-95 text-white font-semibold py-2.5 px-4 rounded-xl shadow-lg transition"
-      >
-        <span>⚡</span> วิเคราะห์สัทศาสตร์
-      </button>
+    <!-- Musical Staff Container -->
+    <div id="staffSection" class="hidden flex flex-col gap-2 bg-slate-950 border border-slate-800 rounded-2xl p-4">
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-slate-400 font-semibold tracking-wide uppercase">บรรทัด 5 เส้น (กุญแจซอล / Pitch Contour)</span>
+        <button 
+          onclick="playDynamicTone()" 
+          class="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow transition"
+        >
+          <span>📢</span> เล่นเสียงสังเคราะห์ตามคีย์
+        </button>
+      </div>
+      
+      <!-- Staff Render Target -->
+      <div id="staffCanvas" class="w-full overflow-x-auto flex justify-center py-2"></div>
     </div>
 
-    <!-- Result Box -->
-    <div id="resBox" class="hidden rounded-xl p-4 text-sm transition-all border leading-relaxed bg-slate-900 border-cyan-800 text-slate-100"></div>
-
-    <!-- Close Button -->
-    <button 
-      id="btnClose" 
-      onclick="resetResult()" 
-      class="hidden w-full bg-slate-700 hover:bg-slate-600 text-slate-200 py-2 rounded-lg text-sm transition"
-    >
-      ปิด
-    </button>
   </div>
 
   <script>
+    const VF = Vex.Flow;
+
     const HIGH_CLASS = new Set(["ข","ฃ","ฉ","ฐ","ถ","ผ","ฝ","ศ","ษ","ส","ห"]);
     const MID_CLASS = new Set(["ก","จ","ด","ต","บ","ป","อ","ฎ","ฏ"]);
     const LOW_CLASS = new Set(["ค","ฅ","ฆ","ง","ช","ซ","ฌ","ญ","ฑ","ฒ","ณ","ท","ธ","น","พ","ฟ","ภ","ม","ย","ร","ล","ว","ฬ","ฮ"]);
 
-    let currentToneFreq = 261.63; // F0 ค่าเริ่มต้น (Hz)
+    let currentToneData = null;
 
-    function analyzeThaiPhonetics(word) {
+    // กฎสัทศาสตร์และตารางคู่โน้ตวรรณยุกต์
+    function analyzeToneProfile(word) {
       if (!word) return null;
       
-      // สกัดพยัญชนะต้นตัวแรก
       let initial = "";
       for (const char of word) {
         if (HIGH_CLASS.has(char) || MID_CLASS.has(char) || LOW_CLASS.has(char)) {
@@ -84,94 +92,174 @@
         }
       }
 
-      let consonantClass = "ไม่ระบุ";
-      let toneName = "สามัญ (Mid)";
-      let targetFreq = 261.63; // C4
+      const hasMaiEk = word.includes("่");
+      const hasMaiTho = word.includes("้");
+      const hasMaiTri = word.includes("๊");
+      const hasMaiChattawa = word.includes("๋");
 
-      if (HIGH_CLASS.has(initial)) {
-        consonantClass = "อักษรสูง";
-        toneName = "จัตวา (Rising)";
-        targetFreq = 293.66; // D4
-      } else if (MID_CLASS.has(initial)) {
-        consonantClass = "อักษรกลาง";
-        toneName = "สามัญ (Mid/Level)";
-        targetFreq = 261.63; // C4
-      } else if (LOW_CLASS.has(initial)) {
-        consonantClass = "อักษรต่ำ";
-        toneName = "สามัญ (Mid/Level)";
-        targetFreq = 246.94; // B3
+      let consonantClass = "อักษรกลาง";
+      if (HIGH_CLASS.has(initial)) consonantClass = "อักษรสูง";
+      else if (LOW_CLASS.has(initial)) consonantClass = "อักษรต่ำ";
+
+      let toneName = "สามัญ (Mid)";
+      let notes = ["c/4"];
+      let freqs = [261.63, 261.63]; // Start, End freq (Hz)
+      let description = "ระดับเสียงคงที่ (Mid Level)";
+
+      if (hasMaiEk) {
+        toneName = "เอก (Low-Falling)";
+        notes = ["b/3", "a/3"];
+        freqs = [246.94, 220.00];
+        description = "เสียงต่ำแล้วกดลง (Low-Falling)";
+      } else if (hasMaiTho) {
+        toneName = "โท (High-Falling)";
+        notes = ["e/4", "a/3"];
+        freqs = [329.63, 220.00];
+        description = "เสียงสูงแล้วทอดระดับลง (Falling Contour)";
+      } else if (hasMaiTri) {
+        toneName = "ตรี (High)";
+        notes = ["g/4"];
+        freqs = [392.00, 392.00];
+        description = "เสียงสูงระดับบน (High Level)";
+      } else if (hasMaiChattawa) {
+        toneName = "จัตวา (Low-Rising)";
+        notes = ["a/3", "d/4"];
+        freqs = [220.00, 293.66];
+        description = "เสียงต่ำแล้วลอยขึ้นสูง (Rising Contour)";
+      } else {
+        // ไม่มีรูปวรรณยุกต์
+        if (consonantClass === "อักษรสูง") {
+          toneName = "จัตวา (พื้นเสียงอักษรสูง)";
+          notes = ["a/3", "d/4"];
+          freqs = [220.00, 293.66];
+          description = "พื้นเสียงเป็นเสียงจัตวา (Low-Rising)";
+        } else {
+          toneName = "สามัญ (พื้นเสียง)";
+          notes = ["c/4"];
+          freqs = [261.63, 261.63];
+          description = "ระดับเสียงสามัญคงที่ (C4 Reference)";
+        }
       }
 
       return {
-        word: word,
+        word,
         initial: initial || "-",
-        consonantClass: consonantClass,
-        toneName: toneName,
-        pitchTarget: `${targetFreq.toFixed(2)} Hz`,
-        freq: targetFreq
+        consonantClass,
+        toneName,
+        notes,
+        freqs,
+        description
       };
+    }
+
+    function renderStaff(toneData) {
+      const container = document.getElementById("staffCanvas");
+      container.innerHTML = "";
+
+      const renderer = new VF.Renderer(container, VF.Renderer.Backends.SVG);
+      renderer.resize(360, 140);
+      const context = renderer.getContext();
+      context.setFont("Arial", 10, "").setBackgroundFillStyle("#0f172a");
+
+      // สร้าง Stave (บรรทัด 5 เส้น)
+      const stave = new VF.Stave(10, 10, 340);
+      stave.addClef("treble").addTimeSignature("4/4");
+      stave.setContext(context).draw();
+
+      let staveNotes = [];
+
+      if (toneData.notes.length === 1) {
+        // โน้ตเดี่ยว (สามัญ / ตรี)
+        staveNotes.push(
+          new VF.StaveNote({ clef: "treble", keys: [toneData.notes[0]], duration: "w" })
+        );
+      } else {
+        // โน้ตเปลี่ยนระดับ (เอก / โท / จัตวา) แสดงเป็น 2 ตัวโน้ตเชื่อม Glissando
+        staveNotes.push(
+          new VF.StaveNote({ clef: "treble", keys: [toneData.notes[0]], duration: "h" }),
+          new VF.StaveNote({ clef: "treble", keys: [toneData.notes[1]], duration: "h" })
+        );
+      }
+
+      // ตกแต่งสีโน้ตให้เข้ากับ Dark Mode
+      staveNotes.forEach(note => {
+        note.setStyle({ fillStyle: "#22d3ee", strokeStyle: "#22d3ee" });
+      });
+
+      const voice = new VF.Voice({ num_beats: 4, beat_value: 4 });
+      voice.addTickables(staveNotes);
+
+      new VF.Formatter().joinVoices([voice]).format([voice], 220);
+      voice.draw(context, stave);
+
+      // วาดเส้น Curve เชื่อมต่อ (Slur/Glissando) เมื่อมีการเลื่อนเสียง
+      if (staveNotes.length > 1) {
+        const curve = new VF.Curve(staveNotes[0], staveNotes[1], {
+          thickness: 2,
+          position: VF.Curve.Position.NEAR_HEAD,
+          cps: [{ x: 0, y: 15 }, { x: 0, y: 15 }]
+        });
+        curve.setContext(context).draw();
+      }
     }
 
     function handleAnalyze() {
       const text = document.getElementById('textInput').value.trim();
-      if (!text) {
-        showStatus('กรุณาพิมพ์ข้อความที่ต้องการวิเคราะห์', 'error');
-        return;
-      }
+      if (!text) return;
 
-      const result = analyzeThaiPhonetics(text);
-      currentToneFreq = result.freq;
+      currentToneData = analyzeToneProfile(text);
 
-      const resultHtml = `
-        <div class="space-y-1.5">
-          <p><strong>คำที่วิเคราะห์:</strong> <span class="text-cyan-300 font-bold">${result.word}</span></p>
-          <p><strong>พยัญชนะต้น:</strong> ${result.initial} (${result.consonantClass})</p>
-          <p><strong>ระดับเสียงวรรณยุกต์:</strong> <span class="text-amber-400 font-semibold">${result.toneName}</span></p>
-          <p><strong>Target Pitch (F0):</strong> <span class="text-emerald-400 font-mono font-bold">${result.pitchTarget}</span></p>
+      const resBox = document.getElementById('resBox');
+      const staffSection = document.getElementById('staffSection');
+
+      resBox.innerHTML = `
+        <div class="grid grid-cols-2 gap-3 text-xs md:text-sm">
+          <div><span class="text-slate-400">คำที่ทดสอบ:</span> <span class="text-cyan-300 font-bold">${currentToneData.word}</span></div>
+          <div><span class="text-slate-400">พยัญชนะต้น:</span> <span class="text-slate-200">${currentToneData.initial} (${currentToneData.consonantClass})</span></div>
+          <div><span class="text-slate-400">ระดับวรรณยุกต์:</span> <span class="text-amber-400 font-semibold">${currentToneData.toneName}</span></div>
+          <div><span class="text-slate-400">Target F0:</span> <span class="text-emerald-400 font-mono">${currentToneData.freqs[0].toFixed(1)} ${currentToneData.freqs[0] !== currentToneData.freqs[1] ? '→ ' + currentToneData.freqs[1].toFixed(1) : ''} Hz</span></div>
         </div>
       `;
-      showStatus(resultHtml, 'success');
+
+      resBox.classList.remove('hidden');
+      staffSection.classList.remove('hidden');
+
+      renderStaff(currentToneData);
     }
 
-    function playToneSound() {
+    // Dynamic Pitch Synthesizer (จำลองเสียงเลื่อนความถี่จริงตาม Contour)
+    function playDynamicTone() {
+      if (!currentToneData) return;
+
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
 
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(currentToneFreq, audioCtx.currentTime);
+      const [startFreq, endFreq] = currentToneData.freqs;
+      const duration = 0.55;
 
-      gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.6);
+      osc.type = 'sawtooth';
+      
+      // ตั้งค่าการเลื่อนความถี่ (Pitch Transition)
+      osc.frequency.setValueAtTime(startFreq, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(endFreq, audioCtx.currentTime + duration);
+
+      // Volume Envelope (ADSR เบื้องต้น ป้องกันเสียงแป๊ก)
+      gain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.2, audioCtx.currentTime + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
 
       osc.connect(gain);
       gain.connect(audioCtx.destination);
 
       osc.start();
-      osc.stop(audioCtx.currentTime + 0.6);
+      osc.stop(audioCtx.currentTime + duration);
     }
 
-    function showStatus(htmlContent, type) {
-      const resBox = document.getElementById('resBox');
-      const btnClose = document.getElementById('btnClose');
-      
-      resBox.className = "rounded-xl p-4 text-sm transition-all border leading-relaxed";
-
-      if (type === 'error') {
-        resBox.classList.add('bg-red-950/80', 'border-red-800', 'text-red-200');
-      } else {
-        resBox.classList.add('bg-slate-900', 'border-cyan-800', 'text-slate-100');
-      }
-
-      resBox.innerHTML = htmlContent;
-      resBox.classList.remove('hidden');
-      btnClose.classList.remove('hidden');
-    }
-
-    function resetResult() {
-      document.getElementById('resBox').classList.add('hidden');
-      document.getElementById('btnClose').classList.add('hidden');
-    }
+    // รันเริ่มต้นอัตโนมัติ 1 ครั้ง
+    window.addEventListener('DOMContentLoaded', () => {
+      handleAnalyze();
+    });
   </script>
 </body>
 </html>
