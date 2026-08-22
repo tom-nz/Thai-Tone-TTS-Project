@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Thai 5-Tone Synthesizer & Natural Speech Engine</title>
+  <title>Thai Advanced Articulatory TTS & Staff Validator</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- VexFlow Library -->
   <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
@@ -16,31 +16,31 @@
       border-radius: 1rem;
     }
     input[type=range] {
-      accent-color: #22d3ee;
+      accent-color: #06b6d4;
     }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-4">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-3 md:p-6">
 
-  <div class="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl p-6 flex flex-col gap-5">
+  <div class="w-full max-w-3xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl p-5 md:p-7 flex flex-col gap-5">
     
     <!-- Header -->
     <div class="flex items-center justify-between border-b border-slate-800 pb-4">
       <div class="flex items-center gap-2.5">
-        <span class="text-2xl">🗣️</span>
-        <h1 class="text-lg md:text-xl font-bold text-cyan-400">Thai 5-Tone Natural Speech Synthesizer</h1>
+        <span class="text-2xl">🎙️</span>
+        <h1 class="text-lg md:text-xl font-bold text-cyan-400">Thai Articulatory TTS & Pitch Validator</h1>
       </div>
-      <span class="text-xs bg-cyan-950/90 text-cyan-300 border border-cyan-800/80 px-2.5 py-1 rounded-full font-mono">Formant V3 Engine</span>
+      <span class="text-xs bg-cyan-950 text-cyan-300 border border-cyan-800 px-3 py-1 rounded-full font-mono">Bio-Acoustic Engine</span>
     </div>
 
     <!-- Text Input Area -->
     <div class="flex flex-col gap-1.5">
-      <label class="text-xs text-slate-400 font-medium">พิมพ์พยางค์หรือคำต้นแบบ (เช่น กอ, มอ, กา, ปา, คา):</label>
+      <label class="text-xs text-slate-400 font-medium">พิมพ์คำหรือพยางค์ต้นแบบ:</label>
       <div class="flex gap-2">
         <input 
           type="text" 
           id="textInput" 
-          placeholder="พิมพ์คำ เช่น กอ, มอ..." 
+          placeholder="พิมพ์คำ เช่น กอ, มอ, กา..." 
           class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-base text-slate-100 focus:outline-none focus:border-cyan-500 transition font-medium"
           value="กอ"
         />
@@ -53,72 +53,124 @@
       </div>
     </div>
 
-    <!-- Phonetic Profile Info -->
-    <div id="profileBox" class="hidden grid grid-cols-3 gap-2 bg-slate-950 border border-slate-800 rounded-2xl p-3 text-xs md:text-sm"></div>
-
-    <!-- Musical Staff Container -->
+    <!-- Musical Staff Container & Pitch Validation Status -->
     <div id="staffSection" class="hidden flex flex-col gap-3 bg-slate-950 border border-slate-800 rounded-2xl p-4">
       <div class="flex items-center justify-between flex-wrap gap-2">
-        <span class="text-xs text-slate-400 font-semibold tracking-wide uppercase">บรรทัด 5 เส้น กุญแจซอล (สามัญ - เอก - โท - ตรี - จัตวา)</span>
+        <span class="text-xs text-slate-400 font-semibold tracking-wide uppercase">บรรทัด 5 เส้น (กุญแจซอล C4 Reference)</span>
         <button 
           onclick="playSequence()" 
-          class="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow transition"
+          class="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow transition"
         >
           <span>▶️</span> เล่นไล่ 5 เสียงรวดเดียว
         </button>
       </div>
       
-      <div id="staffCanvas" class="w-full overflow-x-auto flex justify-center py-2"></div>
+      <!-- Staff Render Target -->
+      <div id="staffCanvas" class="w-full overflow-x-auto flex justify-center py-1"></div>
+
+      <!-- Realtime Pitch Validation Alert Box -->
+      <div id="validatorBox" class="rounded-xl p-3 text-xs border flex items-center gap-2 bg-slate-900 border-slate-800 text-slate-300">
+        <span id="validatorIcon">🔍</span>
+        <span id="validatorMsg">สถานะช่วงความถี่อยู่ในเกณฑ์ปกติบนบรรทัด 5 เส้น</span>
+      </div>
     </div>
 
     <!-- 5 Tone Grid Player -->
     <div id="toneGrid" class="hidden grid grid-cols-5 gap-2"></div>
 
-    <!-- Audio Shaper Control Panel -->
-    <div class="flex flex-col gap-3 bg-slate-950 border border-slate-800 rounded-2xl p-4">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+    <!-- Advanced Acoustic & Articulatory Sliders (แผงควบคุมสรีรวิทยาและเสียงสัทศาสตร์) -->
+    <div class="flex flex-col gap-4 bg-slate-950 border border-slate-800 rounded-2xl p-4 md:p-5">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
         <span class="text-xs text-cyan-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
-          <span>🎚️</span> ปรับแต่งโทนเสียงพูดและความนุ่มนวล (Vocal Equalizer)
+          <span>🎛️</span> แผงปรับกายวิภาคเสียงพูด (Articulatory & Acoustic Parameters)
         </span>
-        <button onclick="resetSliders()" class="text-[11px] text-slate-400 hover:text-slate-200 underline">คืนค่าเดิม</button>
+        <button onclick="resetSliders()" class="text-xs text-slate-400 hover:text-slate-200 underline">คืนค่ามาตรฐาน</button>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-        
-        <!-- Warmth Filter -->
+
+        <!-- 1. Master Pitch F0 -->
         <div class="flex flex-col gap-1">
-          <div class="flex justify-between">
-            <span class="text-slate-300 font-medium">ความนุ่มนวล / ตัดเสียงแหลม (Warmth Filter)</span>
-            <span id="warmthVal" class="text-cyan-400 font-mono">1400 Hz</span>
+          <div class="flex justify-between text-slate-300">
+            <span>1. คีย์ความถี่หลัก F0 (Base Pitch)</span>
+            <span class="text-slate-500 text-[11px]">(บรรทัด 5 เส้น: 196 - 440 Hz)</span>
           </div>
-          <input type="range" id="warmthSlider" min="500" max="3000" step="50" value="1400" oninput="updateControls()" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          <div class="flex items-center gap-3">
+            <span id="f0Val" class="w-16 text-right font-mono font-bold text-cyan-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">261.6 Hz</span>
+            <input type="range" id="f0Slider" min="150" max="480" step="1" value="261.6" oninput="updateParams()" class="flex-1 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          </div>
         </div>
 
-        <!-- Formant Q -->
+        <!-- 2. Vocal Cord Tension -->
         <div class="flex flex-col gap-1">
-          <div class="flex justify-between">
-            <span class="text-slate-300 font-medium">ความคมชัดของเสียงสระ (Vowel Formant Q)</span>
-            <span id="qVal" class="text-cyan-400 font-mono">5.0</span>
+          <div class="flex justify-between text-slate-300">
+            <span>2. ความตึงของเส้นเสียง (Glottal Tension)</span>
+            <span class="text-slate-500 text-[11px]">(ผสม Triangle / Saw)</span>
           </div>
-          <input type="range" id="qSlider" min="1.0" max="10.0" step="0.5" value="5.0" oninput="updateControls()" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          <div class="flex items-center gap-3">
+            <span id="tensionVal" class="w-16 text-right font-mono font-bold text-cyan-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">35 %</span>
+            <input type="range" id="tensionSlider" min="0" max="100" step="1" value="35" oninput="updateParams()" class="flex-1 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          </div>
         </div>
 
-        <!-- Attack Time -->
+        <!-- 3. Pharyngeal Narrowness (F1 Tongue Height) -->
         <div class="flex flex-col gap-1">
-          <div class="flex justify-between">
-            <span class="text-slate-300 font-medium">ความนุ่มตอนเริ่มออกเสียง (Attack Time)</span>
-            <span id="attackVal" class="text-cyan-400 font-mono">90 ms</span>
+          <div class="flex justify-between text-slate-300">
+            <span>3. ระดับความสูงลิ้น / ความแคบคอ (F1 Formant)</span>
+            <span class="text-slate-500 text-[11px]">(เปิด-ปิดช่องคอ)</span>
           </div>
-          <input type="range" id="attackSlider" min="10" max="200" step="10" value="90" oninput="updateControls()" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          <div class="flex items-center gap-3">
+            <span id="f1Val" class="w-16 text-right font-mono font-bold text-cyan-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">550 Hz</span>
+            <input type="range" id="f1Slider" min="250" max="950" step="10" value="550" oninput="updateParams()" class="flex-1 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          </div>
         </div>
 
-        <!-- Master Pitch Scale -->
+        <!-- 4. Tongue Advancement (F2 Tongue Position) -->
         <div class="flex flex-col gap-1">
-          <div class="flex justify-between">
-            <span class="text-slate-300 font-medium">คีย์ความถี่หลัก F0 (Pitch Scale)</span>
-            <span id="pitchVal" class="text-cyan-400 font-mono">100% (C4)</span>
+          <div class="flex justify-between text-slate-300">
+            <span>4. ตำแหน่งลิ้น หน้า-หลัง (F2 Formant)</span>
+            <span class="text-slate-500 text-[11px]">(หน้า/กลาง/หลัง)</span>
           </div>
-          <input type="range" id="pitchSlider" min="70" max="140" step="5" value="100" oninput="updateControls()" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          <div class="flex items-center gap-3">
+            <span id="f2Val" class="w-16 text-right font-mono font-bold text-cyan-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">850 Hz</span>
+            <input type="range" id="f2Slider" min="600" max="2500" step="20" value="850" oninput="updateParams()" class="flex-1 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          </div>
+        </div>
+
+        <!-- 5. Aspiration Noise (พ่นลม) -->
+        <div class="flex flex-col gap-1">
+          <div class="flex justify-between text-slate-300">
+            <span>5. การพ่นลม / ลมหายใจลอด (Breath Aspiration)</span>
+            <span class="text-slate-500 text-[11px]">(Pink/White Noise)</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span id="aspirationVal" class="w-16 text-right font-mono font-bold text-cyan-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">12 %</span>
+            <input type="range" id="aspirationSlider" min="0" max="50" step="1" value="12" oninput="updateParams()" class="flex-1 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          </div>
+        </div>
+
+        <!-- 6. Attack Duration -->
+        <div class="flex flex-col gap-1">
+          <div class="flex justify-between text-slate-300">
+            <span>6. ระยะเวลาพยัญชนะเริ่มต้น (Attack Time)</span>
+            <span class="text-slate-500 text-[11px]">(ขึ้นต้นพยางค์)</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span id="attackVal" class="w-16 text-right font-mono font-bold text-cyan-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">90 ms</span>
+            <input type="range" id="attackSlider" min="10" max="250" step="5" value="90" oninput="updateParams()" class="flex-1 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          </div>
+        </div>
+
+        <!-- 7. Release Duration -->
+        <div class="flex flex-col gap-1 md:col-span-2">
+          <div class="flex justify-between text-slate-300">
+            <span>7. ระยะเวลาทอดหางเสียงลงท้าย (Release Time)</span>
+            <span class="text-slate-500 text-[11px]">(หางเสียงวรรณยุกต์)</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span id="releaseVal" class="w-16 text-right font-mono font-bold text-cyan-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">550 ms</span>
+            <input type="range" id="releaseSlider" min="200" max="1000" step="20" value="550" oninput="updateParams()" class="flex-1 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          </div>
         </div>
 
       </div>
@@ -138,44 +190,88 @@
       "อ": { f1: 550, f2: 850 },
       "ี": { f1: 280, f2: 2250 },
       "ู": { f1: 320, f2: 800 },
-      "default": { f1: 600, f2: 1100 }
+      "default": { f1: 550, f2: 850 }
     };
 
-    const TONE_SPECS = [
-      { name: "สามัญ", thaiTone: "สามัญ", noteKey: "c/4", startFreq: 261.63, endFreq: 261.63 },
-      { name: "เอก", thaiTone: "เอก", noteKey: "b/3", startFreq: 246.94, endFreq: 220.00 },
-      { name: "โท", thaiTone: "โท", noteKey: "e/4", startFreq: 329.63, endFreq: 220.00 },
-      { name: "ตรี", thaiTone: "ตรี", noteKey: "g/4", startFreq: 392.00, endFreq: 392.00 },
-      { name: "จัตวา", thaiTone: "จัตวา", noteKey: "d/4", startFreq: 220.00, endFreq: 293.66 }
+    // อัตราส่วน Pitch Multiplier ของทั้ง 5 วรรณยุกต์เทียบกับค่า Base F0
+    const TONE_RATIOS = [
+      { name: "สามัญ", noteKey: "c/4", startR: 1.0, endR: 1.0 },
+      { name: "เอก", noteKey: "b/3", startR: 0.943, endR: 0.841 },
+      { name: "โท", noteKey: "e/4", startR: 1.259, endR: 0.841 },
+      { name: "ตรี", noteKey: "g/4", startR: 1.498, endR: 1.498 },
+      { name: "จัตวา", noteKey: "d/4", startR: 0.841, endR: 1.122 }
     ];
 
     let currentAnalysis = null;
 
-    let synthParams = {
-      warmthCutoff: 1400,
-      resonanceQ: 5.0,
+    let synthState = {
+      f0: 261.6,
+      tension: 0.35,
+      f1: 550,
+      f2: 850,
+      aspiration: 0.12,
       attackTime: 0.09,
-      pitchScale: 1.0
+      releaseTime: 0.55
     };
 
-    function updateControls() {
-      synthParams.warmthCutoff = parseFloat(document.getElementById('warmthSlider').value);
-      synthParams.resonanceQ = parseFloat(document.getElementById('qSlider').value);
-      synthParams.attackTime = parseFloat(document.getElementById('attackSlider').value) / 1000;
-      synthParams.pitchScale = parseFloat(document.getElementById('pitchSlider').value) / 100;
+    function updateParams() {
+      synthState.f0 = parseFloat(document.getElementById('f0Slider').value);
+      synthState.tension = parseFloat(document.getElementById('tensionSlider').value) / 100;
+      synthState.f1 = parseFloat(document.getElementById('f1Slider').value);
+      synthState.f2 = parseFloat(document.getElementById('f2Slider').value);
+      synthState.aspiration = parseFloat(document.getElementById('aspirationSlider').value) / 100;
+      synthState.attackTime = parseFloat(document.getElementById('attackSlider').value) / 1000;
+      synthState.releaseTime = parseFloat(document.getElementById('releaseSlider').value) / 1000;
 
-      document.getElementById('warmthVal').innerText = `${synthParams.warmthCutoff} Hz`;
-      document.getElementById('qVal').innerText = synthParams.resonanceQ.toFixed(1);
-      document.getElementById('attackVal').innerText = `${(synthParams.attackTime * 1000).toFixed(0)} ms`;
-      document.getElementById('pitchVal').innerText = `${(synthParams.pitchScale * 100).toFixed(0)}%`;
+      // อัปเดตตัวเลขหน้า Slider
+      document.getElementById('f0Val').innerText = `${synthState.f0.toFixed(1)} Hz`;
+      document.getElementById('tensionVal').innerText = `${(synthState.tension * 100).toFixed(0)} %`;
+      document.getElementById('f1Val').innerText = `${synthState.f1.toFixed(0)} Hz`;
+      document.getElementById('f2Val').innerText = `${synthState.f2.toFixed(0)} Hz`;
+      document.getElementById('aspirationVal').innerText = `${(synthState.aspiration * 100).toFixed(0)} %`;
+      document.getElementById('attackVal').innerText = `${(synthState.attackTime * 1000).toFixed(0)} ms`;
+      document.getElementById('releaseVal').innerText = `${(synthState.releaseTime * 1000).toFixed(0)} ms`;
+
+      validateStaffRange();
+      renderToneGrid();
     }
 
     function resetSliders() {
-      document.getElementById('warmthSlider').value = 1400;
-      document.getElementById('qSlider').value = 5.0;
+      document.getElementById('f0Slider').value = 261.6;
+      document.getElementById('tensionSlider').value = 35;
+      document.getElementById('f1Slider').value = 550;
+      document.getElementById('f2Slider').value = 850;
+      document.getElementById('aspirationSlider').value = 12;
       document.getElementById('attackSlider').value = 90;
-      document.getElementById('pitchSlider').value = 100;
-      updateControls();
+      document.getElementById('releaseSlider').value = 550;
+      updateParams();
+    }
+
+    // ตรวจสอบว่าความถี่หลุดออกนอกช่วงมาตรฐานของบรรทัด 5 เส้น (G3 ถึง A5) หรือไม่
+    function validateStaffRange() {
+      const validatorBox = document.getElementById('validatorBox');
+      const validatorIcon = document.getElementById('validatorIcon');
+      const validatorMsg = document.getElementById('validatorMsg');
+
+      const minToleratedFreq = 196.0; // โน้ต G3 (ใต้เส้นล่างสุด)
+      const maxToleratedFreq = 440.0; // โน้ต A5 (เหนือเส้นบนสุด)
+
+      const minGenerated = synthState.f0 * 0.841;
+      const maxGenerated = synthState.f0 * 1.498;
+
+      if (maxGenerated > maxToleratedFreq) {
+        validatorBox.className = "rounded-xl p-3 text-xs border flex items-center gap-2 bg-red-950/80 border-red-800 text-red-200";
+        validatorIcon.innerText = "⚠️";
+        validatorMsg.innerHTML = `<strong>แจ้งเตือน:</strong> ความถี่สูงสุด (${maxGenerated.toFixed(1)} Hz ในเสียงตรี) <strong>เกินขอบเขตบน</strong> ของบรรทัด 5 เส้นมาตรฐาน (เกิน A5 > 440 Hz)`;
+      } else if (minGenerated < minToleratedFreq) {
+        validatorBox.className = "rounded-xl p-3 text-xs border flex items-center gap-2 bg-amber-950/80 border-amber-800 text-amber-200";
+        validatorIcon.innerText = "⚠️";
+        validatorMsg.innerHTML = `<strong>แจ้งเตือน:</strong> ความถี่ต่ำสุด (${minGenerated.toFixed(1)} Hz ในเสียงเอก/จัตวา) <strong>ต่ำกว่าขอบเขตล่าง</strong> ของบรรทัด 5 เส้น (ต่ำกว่า G3 < 196 Hz)`;
+      } else {
+        validatorBox.className = "rounded-xl p-3 text-xs border flex items-center gap-2 bg-slate-900 border-emerald-800 text-emerald-300";
+        validatorIcon.innerText = "✅";
+        validatorMsg.innerHTML = `ช่วงความถี่ทั้ง 5 เสียง (${minGenerated.toFixed(1)} Hz — ${maxGenerated.toFixed(1)} Hz) <strong>อยู่ในพิกัดบรรทัด 5 เส้นอย่างสมบูรณ์</strong>`;
+      }
     }
 
     function extractPhonetics(word) {
@@ -196,11 +292,16 @@
         }
       }
 
+      const formants = VOWEL_FORMANTS[vowelKey];
+      document.getElementById('f1Slider').value = formants.f1;
+      document.getElementById('f2Slider').value = formants.f2;
+      updateParams();
+
       let consonantClass = "อักษรกลาง";
       if (HIGH_CLASS.has(initial)) consonantClass = "อักษรสูง";
       else if (LOW_CLASS.has(initial)) consonantClass = "อักษรต่ำ";
 
-      return { initial, consonantClass, vowelKey, formants: VOWEL_FORMANTS[vowelKey] };
+      return { initial, consonantClass, vowelKey };
     }
 
     function renderStaff5Tones() {
@@ -216,7 +317,7 @@
       stave.addClef("treble").addTimeSignature("5/4");
       stave.setContext(context).draw();
 
-      const staveNotes = TONE_SPECS.map(t => {
+      const staveNotes = TONE_RATIOS.map(t => {
         const note = new VF.StaveNote({ clef: "treble", keys: [t.noteKey], duration: "q" });
         note.setStyle({ fillStyle: "#22d3ee", strokeStyle: "#22d3ee" });
         return note;
@@ -229,135 +330,142 @@
       voice.draw(context, stave);
     }
 
+    function renderToneGrid() {
+      const toneGrid = document.getElementById('toneGrid');
+      toneGrid.innerHTML = "";
+
+      TONE_RATIOS.forEach((tone, idx) => {
+        const startF = synthState.f0 * tone.startR;
+        const endF = synthState.f0 * tone.endR;
+
+        const card = document.createElement("button");
+        card.className = "flex flex-col items-center justify-center p-2.5 bg-slate-950 border border-slate-800 hover:border-cyan-500 rounded-xl transition active:scale-95 text-center gap-1 shadow";
+        card.onclick = () => playArticulatoryTone(idx);
+        card.innerHTML = `
+          <span class="text-xs font-bold text-cyan-400">${tone.name}</span>
+          <span class="text-[10px] text-slate-400 font-mono">${startF.toFixed(0)}${startF !== endF ? '→' + endF.toFixed(0) : ''}Hz</span>
+          <span class="text-emerald-400 text-xs">🔊</span>
+        `;
+        toneGrid.appendChild(card);
+      });
+    }
+
     function handleAnalyzeAll() {
       const text = document.getElementById('textInput').value.trim();
       if (!text) return;
 
       currentAnalysis = extractPhonetics(text);
 
-      const profileBox = document.getElementById('profileBox');
-      const staffSection = document.getElementById('staffSection');
-      const toneGrid = document.getElementById('toneGrid');
-
-      profileBox.innerHTML = `
-        <div><span class="text-slate-400">พยัญชนะต้น:</span> <strong class="text-cyan-300">${currentAnalysis.initial} (${currentAnalysis.consonantClass})</strong></div>
-        <div><span class="text-slate-400">สระที่ตรวจจับ:</span> <strong class="text-amber-300">${currentAnalysis.vowelKey}</strong></div>
-        <div><span class="text-slate-400">Formants:</span> <span class="font-mono text-emerald-400">F1:${currentAnalysis.formants.f1} / F2:${currentAnalysis.formants.f2}Hz</span></div>
-      `;
-
-      toneGrid.innerHTML = "";
-      TONE_SPECS.forEach((tone, idx) => {
-        const card = document.createElement("button");
-        card.className = "flex flex-col items-center justify-center p-2.5 bg-slate-950 border border-slate-800 hover:border-cyan-500 rounded-xl transition active:scale-95 text-center gap-1 shadow";
-        card.onclick = () => playSingleTone(idx);
-        card.innerHTML = `
-          <span class="text-xs font-bold text-cyan-400">${tone.name}</span>
-          <span class="text-[10px] text-slate-400 font-mono">${(tone.startFreq * synthParams.pitchScale).toFixed(0)}${tone.startFreq !== tone.endFreq ? '→' + (tone.endFreq * synthParams.pitchScale).toFixed(0) : ''}Hz</span>
-          <span class="text-emerald-400 text-xs">🔊</span>
-        `;
-        toneGrid.appendChild(card);
-      });
-
-      profileBox.classList.remove('hidden');
-      staffSection.classList.remove('hidden');
-      toneGrid.classList.remove('hidden');
+      document.getElementById('staffSection').classList.remove('hidden');
+      document.getElementById('toneGrid').classList.remove('hidden');
 
       renderStaff5Tones();
+      validateStaffRange();
+      renderToneGrid();
     }
 
-    // Natural Speech Formant Synthesizer
-    function playSingleTone(toneIndex, startTimeOffset = 0) {
-      if (!currentAnalysis) return;
-      const tone = TONE_SPECS[toneIndex];
-
+    // Advanced Bio-Acoustic Synthesizer Engine
+    function playArticulatoryTone(toneIndex, startTimeOffset = 0) {
+      const tone = TONE_RATIOS[toneIndex];
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       const now = audioCtx.currentTime + startTimeOffset;
-      const duration = 0.55;
+      const duration = synthState.releaseTime;
 
-      const startF = tone.startFreq * synthParams.pitchScale;
-      const endF = tone.endFreq * synthParams.pitchScale;
+      const startF = synthState.f0 * tone.startR;
+      const endF = synthState.f0 * tone.endR;
 
-      // 1. Multi-Wave Glottal Source (Sine + Triangle + Soft Saw)
-      const oscTri = audioCtx.createOscillator();
-      const oscSine = audioCtx.createOscillator();
-      const oscSaw = audioCtx.createOscillator();
+      // 1. Double Vocal Fold Oscillators (Sine + Sawtooth ตามความตึงของเส้นเสียง)
+      const oscBody = audioCtx.createOscillator();
+      const oscEdge = audioCtx.createOscillator();
+      oscBody.type = 'sine';
+      oscEdge.type = 'sawtooth';
 
-      oscTri.type = 'triangle';
-      oscSine.type = 'sine';
-      oscSaw.type = 'sawtooth';
-
-      [oscTri, oscSine, oscSaw].forEach(osc => {
+      [oscBody, oscEdge].forEach(osc => {
         osc.frequency.setValueAtTime(startF, now);
         osc.frequency.exponentialRampToValueAtTime(endF, now + duration);
       });
 
-      // 2. Subtle Vibrato (LFO)
+      // 2. Subtle Micro-Vibrato
       const lfo = audioCtx.createOscillator();
       const lfoGain = audioCtx.createGain();
-      lfo.frequency.setValueAtTime(5.5, now);
-      lfoGain.gain.setValueAtTime(1.8, now);
-      lfo.connect(oscTri.frequency);
-      lfo.connect(oscSine.frequency);
+      lfo.frequency.setValueAtTime(5.8, now);
+      lfoGain.gain.setValueAtTime(1.5, now);
+      lfo.connect(oscBody.frequency);
+      lfo.connect(oscEdge.frequency);
 
-      // 3. Glottal Rolloff Warmth Filter
-      const glottalFilter = audioCtx.createBiquadFilter();
-      glottalFilter.type = 'lowpass';
-      glottalFilter.frequency.setValueAtTime(synthParams.warmthCutoff, now);
+      // 3. Glottal Tension Balancer
+      const bodyGain = audioCtx.createGain();
+      const edgeGain = audioCtx.createGain();
+      bodyGain.gain.setValueAtTime(1.0 - synthState.tension * 0.7, now);
+      edgeGain.gain.setValueAtTime(synthState.tension * 0.45, now);
 
-      // 4. Formant Resonators (F1, F2, F3)
+      oscBody.connect(bodyGain);
+      oscEdge.connect(edgeGain);
+
+      // 4. Aspiration / Breath Noise Generator (การพ่นลม)
+      const bufferSize = audioCtx.sampleRate * duration;
+      const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
+      const noiseNode = audioCtx.createBufferSource();
+      noiseNode.buffer = noiseBuffer;
+
+      const noiseFilter = audioCtx.createBiquadFilter();
+      noiseFilter.type = 'bandpass';
+      noiseFilter.frequency.setValueAtTime(2200, now);
+      noiseFilter.Q.setValueAtTime(1.5, now);
+
+      const noiseGain = audioCtx.createGain();
+      noiseGain.gain.setValueAtTime(synthState.aspiration * 0.3, now);
+
+      noiseNode.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+
+      // 5. Vocal Tract Formant Filters (F1 & F2 ปรับตามระดับลิ้นและความแคบคอ)
       const f1 = audioCtx.createBiquadFilter();
       f1.type = 'bandpass';
-      f1.frequency.setValueAtTime(currentAnalysis.formants.f1, now);
-      f1.Q.setValueAtTime(synthParams.resonanceQ, now);
+      f1.frequency.setValueAtTime(synthState.f1, now);
+      f1.Q.setValueAtTime(5.2, now);
 
       const f2 = audioCtx.createBiquadFilter();
       f2.type = 'bandpass';
-      f2.frequency.setValueAtTime(currentAnalysis.formants.f2, now);
-      f2.Q.setValueAtTime(synthParams.resonanceQ + 1.0, now);
+      f2.frequency.setValueAtTime(synthState.f2, now);
+      f2.Q.setValueAtTime(6.0, now);
 
-      const f3 = audioCtx.createBiquadFilter();
-      f3.type = 'bandpass';
-      f3.frequency.setValueAtTime(2700, now);
-      f3.Q.setValueAtTime(3.0, now);
-
-      // 5. Volume Envelope
+      // 6. Master Envelope (Attack & Release)
       const masterGain = audioCtx.createGain();
       masterGain.gain.setValueAtTime(0.0001, now);
-      masterGain.gain.exponentialRampToValueAtTime(0.35, now + synthParams.attackTime);
-      masterGain.gain.exponentialRampToValueAtTime(0.20, now + 0.40);
+      masterGain.gain.exponentialRampToValueAtTime(0.35, now + synthState.attackTime);
+      masterGain.gain.exponentialRampToValueAtTime(0.20, now + duration * 0.7);
       masterGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
-      const sawGain = audioCtx.createGain();
-      sawGain.gain.setValueAtTime(0.15, now);
-      oscSaw.connect(sawGain);
-
-      oscSine.connect(glottalFilter);
-      oscTri.connect(glottalFilter);
-      sawGain.connect(glottalFilter);
-
-      glottalFilter.connect(f1);
-      glottalFilter.connect(f2);
-      glottalFilter.connect(f3);
+      // Routing
+      bodyGain.connect(f1);
+      bodyGain.connect(f2);
+      edgeGain.connect(f1);
+      edgeGain.connect(f2);
+      noiseGain.connect(masterGain);
 
       f1.connect(masterGain);
       f2.connect(masterGain);
-      f3.connect(masterGain);
       masterGain.connect(audioCtx.destination);
 
       lfo.start(now);
-      oscTri.start(now);
-      oscSine.start(now);
-      oscSaw.start(now);
+      oscBody.start(now);
+      oscEdge.start(now);
+      noiseNode.start(now);
 
       lfo.stop(now + duration);
-      oscTri.stop(now + duration);
-      oscSine.stop(now + duration);
-      oscSaw.stop(now + duration);
+      oscBody.stop(now + duration);
+      oscEdge.stop(now + duration);
+      noiseNode.stop(now + duration);
     }
 
     function playSequence() {
-      TONE_SPECS.forEach((_, idx) => {
-        playSingleTone(idx, idx * 0.65);
+      TONE_RATIOS.forEach((_, idx) => {
+        playArticulatoryTone(idx, idx * (synthState.releaseTime + 0.12));
       });
     }
 
