@@ -33,7 +33,7 @@
 </head>
 <body>
 
-  <!-- กล่องล็อกอิน -->
+  <!-- ส่วนล็อกอิน -->
   <div id="login-box" class="card">
     <h1>เข้าสู่ระบบแผงควบคุม</h1>
     <p class="subtext">กรุณากรอกรหัสผ่านเพื่อเข้าใช้งาน</p>
@@ -41,7 +41,7 @@
     <button class="btn-main" onclick="checkPass()">เข้าสู่ระบบ</button>
   </div>
 
-  <!-- กล่องแผงควบคุม -->
+  <!-- ส่วนแผงควบคุม -->
   <div id="dashboard-box" class="card hidden">
     <h1>แผงควบคุมหลัก (Control Panel)</h1>
     <p class="subtext">ยินดีต้อนรับสู่ระบบจัดการ theloydas.com</p>
@@ -55,7 +55,7 @@
     <button class="btn-logout" onclick="logout()">ออกจากระบบ</button>
   </div>
 
-  <!-- Modal Popup กล่องข้อความ -->
+  <!-- Modal Popup -->
   <div id="modal" class="modal">
     <div class="modal-content" id="modal-content"></div>
   </div>
@@ -77,7 +77,7 @@
       document.getElementById("dashboard-box").classList.remove("hidden");
     }
 
-    // Modal: บันทึก API Key (แบบซ่อนข้อความ ปลอดภัย 100%)
+    // Modal: จัดการ API Key
     function openApiModal() {
       const currentKey = localStorage.getItem("gemini_api_key") || "";
       const statusText = currentKey ? "🟢 มีการบันทึก Key ในเครื่องแล้ว" : "⚪ ยังไม่ได้ตั้งค่า Key";
@@ -102,11 +102,11 @@
       closeModal();
     }
 
-    // Modal: ทดสอบวิเคราะห์วรรณยุกต์และอ่านออกเสียง
+    // Modal: ทดสอบเสียงและผันวรรณยุกต์
     function openTtsModal() {
       showModal(`
         <h3 style="color:#38bdf8; margin-bottom:6px;">ทดสอบสังเคราะห์เสียง (TTS)</h3>
-        <p style="color:#94a3b8; font-size:0.75rem; margin-bottom:10px;">พิมพ์ข้อความภาษาไทยเพื่อทดสอบระบบเสียงและการวิเคราะห์</p>
+        <p style="color:#94a3b8; font-size:0.75rem; margin-bottom:10px;">พิมพ์คำภาษาไทยเพื่อทดสอบระบบเสียง</p>
         <textarea id="ttsTextInput" placeholder="พิมพ์คำหรือประโยค เช่น กา ก่า ก้า ก๊า ก๋า..."></textarea>
         <div style="display:flex; gap:8px;">
           <button class="btn-main" onclick="playVoice()" style="background:#059669;">🔊 กดฟังเสียง</button>
@@ -117,21 +117,26 @@
       `);
     }
 
-    // ฟังก์ชันเล่นเสียงสังเคราะห์ผ่าน Web Speech API
+    // ระบบเล่นเสียงภาษาไทยตรงจาก Google TTS Audio
     function playVoice() {
       const text = document.getElementById("ttsTextInput").value.trim();
       if (!text) {
         alert("กรุณากรอกข้อความก่อนกดฟังเสียง");
         return;
       }
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "th-TH";
-      utterance.rate = 0.9;
-      window.speechSynthesis.speak(utterance);
+
+      const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=th&client=tw-ob&q=${encodeURIComponent(text)}`;
+      const audio = new Audio(audioUrl);
+      
+      audio.play().catch(() => {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = "th-TH";
+        window.speechSynthesis.speak(utterance);
+      });
     }
 
-    // ฟังก์ชันส่งคำไปให้ Gemini 2.0 Flash ช่วยวิเคราะห์เสียง/วรรณยุกต์
+    // ระบบส่งข้อความวิเคราะห์วรรณยุกต์ผ่าน Gemini API
     async function analyzeToneWithGemini() {
       const apiKey = localStorage.getItem("gemini_api_key");
       const text = document.getElementById("ttsTextInput").value.trim();
@@ -156,7 +161,7 @@
           body: JSON.stringify({
             contents: [{
               parts: [{
-                text: `ช่วยวิเคราะห์คำภาษาไทยนี้: "${text}" โดยบอก:\n1. พยัญชนะต้นและหมู่อักษร (สูง/กลาง/ต่ำ)\n2. รูปและเสียงวรรณยุกต์\n3. คำอ่านสะกดเสียง สรุปสั้นๆ เข้าใจง่าย`
+                text: `ช่วยวิเคราะห์คำภาษาไทยนี้: "${text}" โดยบอก:\n1. พยัญชนะต้นและหมู่อักษร (สูง/กลาง/ต่ำ)\n2. รูปและเสียงวรรณยุกต์\n3. คำอ่านสะกดเสียง สรุปสั้นๆ กระชับ`
               }]
             }]
           })
