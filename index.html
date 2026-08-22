@@ -19,7 +19,7 @@
       <h1 class="text-xl font-bold text-cyan-400 flex items-center gap-2">
         <span>🔊</span> ทดสอบสังเคราะห์เสียง (TTS)
       </h1>
-      <span class="text-xs bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-1 rounded">Python Local Backend</span>
+      <span class="text-xs bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-1 rounded">Offline Engine</span>
     </div>
 
     <!-- Text Input Area -->
@@ -28,7 +28,7 @@
       <textarea 
         id="textInput" 
         rows="3" 
-        placeholder="พิมพ์คำ เช่น กา, ข่า, ค้า..." 
+        placeholder="พิมพ์คำ เช่น กา, ข่า, ค้า, ปา..." 
         class="bg-slate-900 border border-slate-700 rounded-lg p-3 text-base text-slate-100 focus:outline-none focus:border-cyan-500 transition resize-none"
       >กา</textarea>
     </div>
@@ -37,7 +37,7 @@
     <div class="grid grid-cols-2 gap-3">
       <button 
         id="btnPlay" 
-        onclick="playCarrierTone()" 
+        onclick="playToneSound()" 
         class="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-semibold py-2.5 px-4 rounded-xl shadow-lg transition"
       >
         <span>📢</span> กดฟังเสียง
@@ -66,46 +66,82 @@
   </div>
 
   <script>
-    // เรียกใช้ Python Backend (Flask) ที่รันบนพอร์ต 8080
-    async function handleAnalyze() {
-      const text = document.getElementById('textInput').value.trim();
-      const resBox = document.getElementById('resBox');
-      const btnClose = document.getElementById('btnClose');
+    const HIGH_CLASS = new Set(["ข","ฃ","ฉ","ฐ","ถ","ผ","ฝ","ศ","ษ","ส","ห"]);
+    const MID_CLASS = new Set(["ก","จ","ด","ต","บ","ป","อ","ฎ","ฏ"]);
+    const LOW_CLASS = new Set(["ค","ฅ","ฆ","ง","ช","ซ","ฌ","ญ","ฑ","ฒ","ณ","ท","ธ","น","พ","ฟ","ภ","ม","ย","ร","ล","ว","ฬ","ฮ"]);
 
+    let currentToneFreq = 261.63; // F0 ค่าเริ่มต้น (Hz)
+
+    function analyzeThaiPhonetics(word) {
+      if (!word) return null;
+      
+      // สกัดพยัญชนะต้นตัวแรก
+      let initial = "";
+      for (const char of word) {
+        if (HIGH_CLASS.has(char) || MID_CLASS.has(char) || LOW_CLASS.has(char)) {
+          initial = char;
+          break;
+        }
+      }
+
+      let consonantClass = "ไม่ระบุ";
+      let toneName = "สามัญ (Mid)";
+      let targetFreq = 261.63; // C4
+
+      if (HIGH_CLASS.has(initial)) {
+        consonantClass = "อักษรสูง";
+        toneName = "จัตวา (Rising)";
+        targetFreq = 293.66; // D4
+      } else if (MID_CLASS.has(initial)) {
+        consonantClass = "อักษรกลาง";
+        toneName = "สามัญ (Mid/Level)";
+        targetFreq = 261.63; // C4
+      } else if (LOW_CLASS.has(initial)) {
+        consonantClass = "อักษรต่ำ";
+        toneName = "สามัญ (Mid/Level)";
+        targetFreq = 246.94; // B3
+      }
+
+      return {
+        word: word,
+        initial: initial || "-",
+        consonantClass: consonantClass,
+        toneName: toneName,
+        pitchTarget: `${targetFreq.toFixed(2)} Hz`,
+        freq: targetFreq
+      };
+    }
+
+    function handleAnalyze() {
+      const text = document.getElementById('textInput').value.trim();
       if (!text) {
         showStatus('กรุณาพิมพ์ข้อความที่ต้องการวิเคราะห์', 'error');
         return;
       }
 
-      showStatus('กำลังประมวลผลผ่าน Python Engine...', 'loading');
+      const result = analyzeThaiPhonetics(text);
+      currentToneFreq = result.freq;
 
-      try {
-        const response = await fetch(`http://127.0.0.1:8080/analyze?text=${encodeURIComponent(text)}`);
-        const data = await response.json();
-
-        const resultHtml = `
-          <div class="space-y-1">
-            <p><strong>คำที่วิเคราะห์:</strong> ${data.word}</p>
-            <p><strong>ไตรยางศ์:</strong> <span class="text-cyan-400 font-semibold">${data.class}</span></p>
-            <p><strong>Target Pitch:</strong> <span class="text-emerald-400 font-mono">${data.pitch_target}</span></p>
-          </div>
-        `;
-        showStatus(resultHtml, 'success');
-      } catch (err) {
-        showStatus(`❌ ข้อผิดพลาด: ไม่สามารถเชื่อมต่อกับ Python Server ที่พอร์ต 8080 ได้ (${err.message})`, 'error');
-      }
+      const resultHtml = `
+        <div class="space-y-1.5">
+          <p><strong>คำที่วิเคราะห์:</strong> <span class="text-cyan-300 font-bold">${result.word}</span></p>
+          <p><strong>พยัญชนะต้น:</strong> ${result.initial} (${result.consonantClass})</p>
+          <p><strong>ระดับเสียงวรรณยุกต์:</strong> <span class="text-amber-400 font-semibold">${result.toneName}</span></p>
+          <p><strong>Target Pitch (F0):</strong> <span class="text-emerald-400 font-mono font-bold">${result.pitchTarget}</span></p>
+        </div>
+      `;
+      showStatus(resultHtml, 'success');
     }
 
-    // Web Audio Synthesizer
-    function playCarrierTone() {
+    function playToneSound() {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
 
       osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(261.63, audioCtx.currentTime);
+      osc.frequency.setValueAtTime(currentToneFreq, audioCtx.currentTime);
 
-      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.6);
 
       osc.connect(gain);
@@ -123,10 +159,8 @@
 
       if (type === 'error') {
         resBox.classList.add('bg-red-950/80', 'border-red-800', 'text-red-200');
-      } else if (type === 'success') {
-        resBox.classList.add('bg-slate-900', 'border-cyan-800', 'text-slate-100');
       } else {
-        resBox.classList.add('bg-slate-900', 'border-slate-700', 'text-amber-300');
+        resBox.classList.add('bg-slate-900', 'border-cyan-800', 'text-slate-100');
       }
 
       resBox.innerHTML = htmlContent;
