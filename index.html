@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Thai 5-Tone Synthesizer & Sound Shaper</title>
+  <title>Thai 5-Tone Synthesizer & Natural Speech Engine</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- VexFlow Library -->
   <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
@@ -27,15 +27,15 @@
     <!-- Header -->
     <div class="flex items-center justify-between border-b border-slate-800 pb-4">
       <div class="flex items-center gap-2.5">
-        <span class="text-2xl">🎛️</span>
-        <h1 class="text-lg md:text-xl font-bold text-cyan-400">Thai 5-Tone Synthesizer & Audio Shaper</h1>
+        <span class="text-2xl">🗣️</span>
+        <h1 class="text-lg md:text-xl font-bold text-cyan-400">Thai 5-Tone Natural Speech Synthesizer</h1>
       </div>
-      <span class="text-xs bg-cyan-950/90 text-cyan-300 border border-cyan-800/80 px-2.5 py-1 rounded-full font-mono">Analog Warmth Engine</span>
+      <span class="text-xs bg-cyan-950/90 text-cyan-300 border border-cyan-800/80 px-2.5 py-1 rounded-full font-mono">Formant V3 Engine</span>
     </div>
 
     <!-- Text Input Area -->
     <div class="flex flex-col gap-1.5">
-      <label class="text-xs text-slate-400 font-medium">พิมพ์พยางค์หรือคำต้นแบบ (เช่น กอ, มอ, กา, ปา):</label>
+      <label class="text-xs text-slate-400 font-medium">พิมพ์พยางค์หรือคำต้นแบบ (เช่น กอ, มอ, กา, ปา, คา):</label>
       <div class="flex gap-2">
         <input 
           type="text" 
@@ -74,48 +74,48 @@
     <!-- 5 Tone Grid Player -->
     <div id="toneGrid" class="hidden grid grid-cols-5 gap-2"></div>
 
-    <!-- Audio Shaper Control Panel (แผงวอลลุ่มปรับแต่งเสียง) -->
+    <!-- Audio Shaper Control Panel -->
     <div class="flex flex-col gap-3 bg-slate-950 border border-slate-800 rounded-2xl p-4">
       <div class="flex items-center justify-between border-b border-slate-800 pb-2">
         <span class="text-xs text-cyan-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
-          <span>🎚️</span> แผงควบคุมเนื้อเสียงและความนุ่มนวล (Voice Equalizer)
+          <span>🎚️</span> ปรับแต่งโทนเสียงพูดและความนุ่มนวล (Vocal Equalizer)
         </span>
         <button onclick="resetSliders()" class="text-[11px] text-slate-400 hover:text-slate-200 underline">คืนค่าเดิม</button>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
         
-        <!-- Warmth (Low-pass Filter Cutoff) -->
+        <!-- Warmth Filter -->
         <div class="flex flex-col gap-1">
           <div class="flex justify-between">
             <span class="text-slate-300 font-medium">ความนุ่มนวล / ตัดเสียงแหลม (Warmth Filter)</span>
-            <span id="warmthVal" class="text-cyan-400 font-mono">1800 Hz</span>
+            <span id="warmthVal" class="text-cyan-400 font-mono">1400 Hz</span>
           </div>
-          <input type="range" id="warmthSlider" min="600" max="4000" step="50" value="1800" oninput="updateControls()" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          <input type="range" id="warmthSlider" min="500" max="3000" step="50" value="1400" oninput="updateControls()" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
         </div>
 
-        <!-- Resonance Q -->
+        <!-- Formant Q -->
         <div class="flex flex-col gap-1">
           <div class="flex justify-between">
-            <span class="text-slate-300 font-medium">ความคมชัดของสระ (Formant Resonance Q)</span>
-            <span id="qVal" class="text-cyan-400 font-mono">4.5</span>
+            <span class="text-slate-300 font-medium">ความคมชัดของเสียงสระ (Vowel Formant Q)</span>
+            <span id="qVal" class="text-cyan-400 font-mono">5.0</span>
           </div>
-          <input type="range" id="qSlider" min="1.0" max="10.0" step="0.5" value="4.5" oninput="updateControls()" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          <input type="range" id="qSlider" min="1.0" max="10.0" step="0.5" value="5.0" oninput="updateControls()" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
         </div>
 
         <!-- Attack Time -->
         <div class="flex flex-col gap-1">
           <div class="flex justify-between">
             <span class="text-slate-300 font-medium">ความนุ่มตอนเริ่มออกเสียง (Attack Time)</span>
-            <span id="attackVal" class="text-cyan-400 font-mono">80 ms</span>
+            <span id="attackVal" class="text-cyan-400 font-mono">90 ms</span>
           </div>
-          <input type="range" id="attackSlider" min="10" max="250" step="10" value="80" oninput="updateControls()" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          <input type="range" id="attackSlider" min="10" max="200" step="10" value="90" oninput="updateControls()" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
         </div>
 
-        <!-- Master Pitch Base (Transpose) -->
+        <!-- Master Pitch Scale -->
         <div class="flex flex-col gap-1">
           <div class="flex justify-between">
-            <span class="text-slate-300 font-medium">คีย์ความถี่หลัก F0 (Pitch Base)</span>
+            <span class="text-slate-300 font-medium">คีย์ความถี่หลัก F0 (Pitch Scale)</span>
             <span id="pitchVal" class="text-cyan-400 font-mono">100% (C4)</span>
           </div>
           <input type="range" id="pitchSlider" min="70" max="140" step="5" value="100" oninput="updateControls()" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
@@ -151,11 +151,10 @@
 
     let currentAnalysis = null;
 
-    // พารามิเตอร์ของแผงวอลลุ่ม
     let synthParams = {
-      warmthCutoff: 1800,
-      resonanceQ: 4.5,
-      attackTime: 0.08,
+      warmthCutoff: 1400,
+      resonanceQ: 5.0,
+      attackTime: 0.09,
       pitchScale: 1.0
     };
 
@@ -172,9 +171,9 @@
     }
 
     function resetSliders() {
-      document.getElementById('warmthSlider').value = 1800;
-      document.getElementById('qSlider').value = 4.5;
-      document.getElementById('attackSlider').value = 80;
+      document.getElementById('warmthSlider').value = 1400;
+      document.getElementById('qSlider').value = 5.0;
+      document.getElementById('attackSlider').value = 90;
       document.getElementById('pitchSlider').value = 100;
       updateControls();
     }
@@ -266,7 +265,7 @@
       renderStaff5Tones();
     }
 
-    // Formant Synthesizer Engine (ปรับจูนความอุ่นนุ่มของเสียง)
+    // Natural Speech Formant Synthesizer
     function playSingleTone(toneIndex, startTimeOffset = 0) {
       if (!currentAnalysis) return;
       const tone = TONE_SPECS[toneIndex];
@@ -275,26 +274,37 @@
       const now = audioCtx.currentTime + startTimeOffset;
       const duration = 0.55;
 
-      // 1. Voice Source (ผสม Sawtooth + Triangle เพื่อให้เสียงนุ่มขึ้น ไม่แหลมแทงหู)
-      const oscSaw = audioCtx.createOscillator();
-      const oscTri = audioCtx.createOscillator();
-      oscSaw.type = 'sawtooth';
-      oscTri.type = 'triangle';
-
       const startF = tone.startFreq * synthParams.pitchScale;
       const endF = tone.endFreq * synthParams.pitchScale;
 
-      oscSaw.frequency.setValueAtTime(startF, now);
-      oscSaw.frequency.exponentialRampToValueAtTime(endF, now + duration);
-      oscTri.frequency.setValueAtTime(startF, now);
-      oscTri.frequency.exponentialRampToValueAtTime(endF, now + duration);
+      // 1. Multi-Wave Glottal Source (Sine + Triangle + Soft Saw)
+      const oscTri = audioCtx.createOscillator();
+      const oscSine = audioCtx.createOscillator();
+      const oscSaw = audioCtx.createOscillator();
 
-      // 2. Glottal Rolloff / Warmth Lowpass Filter (ตัดความถี่แหลมส่วนเกิน)
-      const warmthFilter = audioCtx.createBiquadFilter();
-      warmthFilter.type = 'lowpass';
-      warmthFilter.frequency.setValueAtTime(synthParams.warmthCutoff, now);
+      oscTri.type = 'triangle';
+      oscSine.type = 'sine';
+      oscSaw.type = 'sawtooth';
 
-      // 3. Formant Filters F1 & F2
+      [oscTri, oscSine, oscSaw].forEach(osc => {
+        osc.frequency.setValueAtTime(startF, now);
+        osc.frequency.exponentialRampToValueAtTime(endF, now + duration);
+      });
+
+      // 2. Subtle Vibrato (LFO)
+      const lfo = audioCtx.createOscillator();
+      const lfoGain = audioCtx.createGain();
+      lfo.frequency.setValueAtTime(5.5, now);
+      lfoGain.gain.setValueAtTime(1.8, now);
+      lfo.connect(oscTri.frequency);
+      lfo.connect(oscSine.frequency);
+
+      // 3. Glottal Rolloff Warmth Filter
+      const glottalFilter = audioCtx.createBiquadFilter();
+      glottalFilter.type = 'lowpass';
+      glottalFilter.frequency.setValueAtTime(synthParams.warmthCutoff, now);
+
+      // 4. Formant Resonators (F1, F2, F3)
       const f1 = audioCtx.createBiquadFilter();
       f1.type = 'bandpass';
       f1.frequency.setValueAtTime(currentAnalysis.formants.f1, now);
@@ -305,26 +315,44 @@
       f2.frequency.setValueAtTime(currentAnalysis.formants.f2, now);
       f2.Q.setValueAtTime(synthParams.resonanceQ + 1.0, now);
 
-      // 4. Amplitude Envelope (ADSR)
-      const gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.28, now + synthParams.attackTime); // Smooth Attack
-      gain.gain.exponentialRampToValueAtTime(0.16, now + 0.38);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+      const f3 = audioCtx.createBiquadFilter();
+      f3.type = 'bandpass';
+      f3.frequency.setValueAtTime(2700, now);
+      f3.Q.setValueAtTime(3.0, now);
 
-      // Route Audio: Oscillators -> Warmth Filter -> Formants -> Gain -> Out
-      oscSaw.connect(warmthFilter);
-      oscTri.connect(warmthFilter);
-      warmthFilter.connect(f1);
-      warmthFilter.connect(f2);
-      f1.connect(gain);
-      f2.connect(gain);
-      gain.connect(audioCtx.destination);
+      // 5. Volume Envelope
+      const masterGain = audioCtx.createGain();
+      masterGain.gain.setValueAtTime(0.0001, now);
+      masterGain.gain.exponentialRampToValueAtTime(0.35, now + synthParams.attackTime);
+      masterGain.gain.exponentialRampToValueAtTime(0.20, now + 0.40);
+      masterGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
-      oscSaw.start(now);
+      const sawGain = audioCtx.createGain();
+      sawGain.gain.setValueAtTime(0.15, now);
+      oscSaw.connect(sawGain);
+
+      oscSine.connect(glottalFilter);
+      oscTri.connect(glottalFilter);
+      sawGain.connect(glottalFilter);
+
+      glottalFilter.connect(f1);
+      glottalFilter.connect(f2);
+      glottalFilter.connect(f3);
+
+      f1.connect(masterGain);
+      f2.connect(masterGain);
+      f3.connect(masterGain);
+      masterGain.connect(audioCtx.destination);
+
+      lfo.start(now);
       oscTri.start(now);
-      oscSaw.stop(now + duration);
+      oscSine.start(now);
+      oscSaw.start(now);
+
+      lfo.stop(now + duration);
       oscTri.stop(now + duration);
+      oscSine.stop(now + duration);
+      oscSaw.stop(now + duration);
     }
 
     function playSequence() {
