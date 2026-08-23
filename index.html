@@ -3,13 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Thai Advanced Articulatory TTS & Staff Validator</title>
+  <title>Thai Articulatory TTS & Pitch Validator</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- VexFlow Library -->
   <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
   <style>
-    body { font-family: 'Sarabun', sans-serif; }
+    * { font-family: 'Sarabun', sans-serif; }
     #staffCanvas svg {
       margin: 0 auto;
       background: #090d16;
@@ -18,165 +20,183 @@
     input[type=range] {
       accent-color: #06b6d4;
     }
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-3 md:p-6">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between p-4 md:p-8">
 
-  <div class="w-full max-w-3xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl p-5 md:p-7 flex flex-col gap-5">
+  <main class="w-full max-w-3xl mx-auto my-auto flex flex-col gap-6">
     
-    <!-- Header -->
-    <div class="flex items-center justify-between border-b border-slate-800 pb-4">
-      <div class="flex items-center gap-2.5">
-        <span class="text-2xl">🎙️</span>
-        <h1 class="text-lg md:text-xl font-bold text-cyan-400">Thai Articulatory TTS & Pitch Validator</h1>
-      </div>
-      <span class="text-xs bg-cyan-950 text-cyan-300 border border-cyan-800 px-3 py-1 rounded-full font-mono">Bio-Acoustic Engine</span>
-    </div>
-
-    <!-- Text Input Area -->
-    <div class="flex flex-col gap-1.5">
-      <label class="text-xs text-slate-400 font-medium">พิมพ์คำหรือพยางค์ต้นแบบ:</label>
-      <div class="flex gap-2">
-        <input 
-          type="text" 
-          id="textInput" 
-          placeholder="พิมพ์คำ เช่น กอ, มอ, กา..." 
-          class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-base text-slate-100 focus:outline-none focus:border-cyan-500 transition font-medium"
-          value="กอ"
-        />
-        <button 
-          onclick="handleAnalyzeAll()" 
-          class="bg-cyan-600 hover:bg-cyan-500 active:scale-95 text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg transition flex items-center gap-1.5"
-        >
-          <span>⚡</span> วิเคราะห์ 5 เสียง
-        </button>
-      </div>
-    </div>
-
-    <!-- Musical Staff Container & Pitch Validation Status -->
-    <div id="staffSection" class="hidden flex flex-col gap-3 bg-slate-950 border border-slate-800 rounded-2xl p-4">
-      <div class="flex items-center justify-between flex-wrap gap-2">
-        <span class="text-xs text-slate-400 font-semibold tracking-wide uppercase">บรรทัด 5 เส้น (กุญแจซอล C4 Reference)</span>
-        <button 
-          onclick="playSequence()" 
-          class="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow transition"
-        >
-          <span>▶️</span> เล่นไล่ 5 เสียงรวดเดียว
-        </button>
-      </div>
+    <!-- Card Container -->
+    <div class="glass-panel rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col gap-6">
       
-      <!-- Staff Render Target -->
-      <div id="staffCanvas" class="w-full overflow-x-auto flex justify-center py-1"></div>
-
-      <!-- Realtime Pitch Validation Alert Box -->
-      <div id="validatorBox" class="rounded-xl p-3 text-xs border flex items-center gap-2 bg-slate-900 border-slate-800 text-slate-300">
-        <span id="validatorIcon">🔍</span>
-        <span id="validatorMsg">สถานะช่วงความถี่อยู่ในเกณฑ์ปกติบนบรรทัด 5 เส้น</span>
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-900 to-blue-900 border border-cyan-500/40 flex items-center justify-center text-2xl shadow-inner">
+            🎙️
+          </div>
+          <div>
+            <h1 class="text-xl md:text-2xl font-bold text-cyan-400">Thai Articulatory TTS & Pitch Validator</h1>
+            <p class="text-xs text-slate-400">แบบจำลองสรีรวิทยาการออกเสียงและตรวจสอบพิกัดความถี่บนบรรทัด 5 เส้น</p>
+          </div>
+        </div>
+        <span class="text-xs bg-cyan-950 text-cyan-300 border border-cyan-800 px-3 py-1 rounded-full font-mono font-medium">Standalone App</span>
       </div>
+
+      <!-- Text Input Area -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs text-slate-400 font-medium">พิมพ์คำหรือพยางค์ต้นแบบ:</label>
+        <div class="flex gap-2">
+          <input 
+            type="text" 
+            id="textInput" 
+            placeholder="พิมพ์คำ เช่น กอ, มอ, กา..." 
+            class="flex-1 bg-slate-950/80 border border-slate-700 rounded-xl px-4 py-2.5 text-base text-slate-100 focus:outline-none focus:border-cyan-500 transition font-medium"
+            value="กอ"
+          />
+          <button 
+            onclick="handleAnalyzeAll()" 
+            class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 active:scale-95 text-white font-semibold px-6 py-2.5 rounded-xl shadow-lg transition flex items-center gap-1.5"
+          >
+            <span>⚡</span> วิเคราะห์ 5 เสียง
+          </button>
+        </div>
+      </div>
+
+      <!-- Musical Staff Container & Validator -->
+      <div id="staffSection" class="flex flex-col gap-3 bg-slate-950/90 border border-slate-800 rounded-2xl p-4 md:p-5">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <span class="text-xs text-slate-400 font-semibold tracking-wide uppercase">บรรทัด 5 เส้น (Middle C4 Reference)</span>
+          <button 
+            onclick="playSequence()" 
+            class="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow transition"
+          >
+            <span>▶️</span> เล่นไล่ 5 เสียงรวดเดียว
+          </button>
+        </div>
+        
+        <div id="staffCanvas" class="w-full overflow-x-auto flex justify-center py-1"></div>
+
+        <div id="validatorBox" class="rounded-xl p-3 text-xs border flex items-center gap-2 bg-slate-900 border-slate-800 text-slate-300">
+          <span id="validatorIcon">🔍</span>
+          <span id="validatorMsg">สถานะช่วงความถี่อยู่ในเกณฑ์ปกติบนบรรทัด 5 เส้น</span>
+        </div>
+      </div>
+
+      <!-- 5 Tone Grid Player -->
+      <div id="toneGrid" class="grid grid-cols-5 gap-2"></div>
+
+      <!-- Advanced Articulatory Sliders -->
+      <div class="flex flex-col gap-4 bg-slate-950/90 border border-slate-800 rounded-2xl p-4 md:p-5">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+          <span class="text-xs text-cyan-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+            <span>🎛️</span> แผงปรับสรีรวิทยาและเนื้อเสียง (Articulatory Controls)
+          </span>
+          <button onclick="resetSliders()" class="text-xs text-slate-400 hover:text-slate-200 underline">คืนค่ามาตรฐาน</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+
+          <!-- 1. Master Pitch F0 -->
+          <div class="flex flex-col gap-1">
+            <div class="flex justify-between text-slate-300">
+              <span>1. ความถี่หลัก F0 (Base Pitch)</span>
+              <span class="text-slate-500 text-[11px]">(พิกัด: 196 - 440 Hz)</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span id="f0Val" class="w-16 text-right font-mono font-bold text-cyan-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">261.6 Hz</span>
+              <input type="range" id="f0Slider" min="150" max="480" step="1" value="261.6" oninput="updateParams()" class="flex-1 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            </div>
+          </div>
+
+          <!-- 2. Vocal Cord Tension -->
+          <div class="flex flex-col gap-1">
+            <div class="flex justify-between text-slate-300">
+              <span>2. ความตึงของเส้นเสียง (Glottal Tension)</span>
+              <span class="text-slate-500 text-[11px]">(เนื้อเสียงหนา/โปร่ง)</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span id="tensionVal" class="w-16 text-right font-mono font-bold text-cyan-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">35 %</span>
+              <input type="range" id="tensionSlider" min="0" max="100" step="1" value="35" oninput="updateParams()" class="flex-1 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            </div>
+          </div>
+
+          <!-- 3. Pharyngeal Narrowness (F1) -->
+          <div class="flex flex-col gap-1">
+            <div class="flex justify-between text-slate-300">
+              <span>3. ความแคบคอ / ระดับลิ้น (F1 Formant)</span>
+              <span class="text-slate-500 text-[11px]">(เปิด-ปิดช่องคอ)</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span id="f1Val" class="w-16 text-right font-mono font-bold text-cyan-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">550 Hz</span>
+              <input type="range" id="f1Slider" min="250" max="950" step="10" value="550" oninput="updateParams()" class="flex-1 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            </div>
+          </div>
+
+          <!-- 4. Tongue Position (F2) -->
+          <div class="flex flex-col gap-1">
+            <div class="flex justify-between text-slate-300">
+              <span>4. ตำแหน่งลิ้น หน้า-หลัง (F2 Formant)</span>
+              <span class="text-slate-500 text-[11px]">(หน้า/กลาง/หลัง)</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span id="f2Val" class="w-16 text-right font-mono font-bold text-cyan-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">850 Hz</span>
+              <input type="range" id="f2Slider" min="600" max="2500" step="20" value="850" oninput="updateParams()" class="flex-1 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            </div>
+          </div>
+
+          <!-- 5. Aspiration Noise -->
+          <div class="flex flex-col gap-1">
+            <div class="flex justify-between text-slate-300">
+              <span>5. การพ่นลม / ลมหายใจลอด (Aspiration)</span>
+              <span class="text-slate-500 text-[11px]">(Breath Noise)</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span id="aspirationVal" class="w-16 text-right font-mono font-bold text-cyan-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">12 %</span>
+              <input type="range" id="aspirationSlider" min="0" max="50" step="1" value="12" oninput="updateParams()" class="flex-1 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            </div>
+          </div>
+
+          <!-- 6. Attack Duration -->
+          <div class="flex flex-col gap-1">
+            <div class="flex justify-between text-slate-300">
+              <span>6. จังหวะเริ่มออกเสียง (Attack Time)</span>
+              <span class="text-slate-500 text-[11px]">(ขึ้นต้นพยางค์)</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span id="attackVal" class="w-16 text-right font-mono font-bold text-cyan-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">90 ms</span>
+              <input type="range" id="attackSlider" min="10" max="250" step="5" value="90" oninput="updateParams()" class="flex-1 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            </div>
+          </div>
+
+          <!-- 7. Release Duration -->
+          <div class="flex flex-col gap-1 md:col-span-2">
+            <div class="flex justify-between text-slate-300">
+              <span>7. ระยะเวลาทอดหางเสียง (Release Time)</span>
+              <span class="text-slate-500 text-[11px]">(ความยาวเสียงวรรณยุกต์)</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span id="releaseVal" class="w-16 text-right font-mono font-bold text-cyan-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">550 ms</span>
+              <input type="range" id="releaseSlider" min="200" max="1000" step="20" value="550" oninput="updateParams()" class="flex-1 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            </div>
+          </div>
+
+        </div>
+      </div>
+
     </div>
 
-    <!-- 5 Tone Grid Player -->
-    <div id="toneGrid" class="hidden grid grid-cols-5 gap-2"></div>
+  </main>
 
-    <!-- Advanced Acoustic & Articulatory Sliders (แผงควบคุมสรีรวิทยาและเสียงสัทศาสตร์) -->
-    <div class="flex flex-col gap-4 bg-slate-950 border border-slate-800 rounded-2xl p-4 md:p-5">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
-        <span class="text-xs text-cyan-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
-          <span>🎛️</span> แผงปรับกายวิภาคเสียงพูด (Articulatory & Acoustic Parameters)
-        </span>
-        <button onclick="resetSliders()" class="text-xs text-slate-400 hover:text-slate-200 underline">คืนค่ามาตรฐาน</button>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-
-        <!-- 1. Master Pitch F0 -->
-        <div class="flex flex-col gap-1">
-          <div class="flex justify-between text-slate-300">
-            <span>1. คีย์ความถี่หลัก F0 (Base Pitch)</span>
-            <span class="text-slate-500 text-[11px]">(บรรทัด 5 เส้น: 196 - 440 Hz)</span>
-          </div>
-          <div class="flex items-center gap-3">
-            <span id="f0Val" class="w-16 text-right font-mono font-bold text-cyan-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">261.6 Hz</span>
-            <input type="range" id="f0Slider" min="150" max="480" step="1" value="261.6" oninput="updateParams()" class="flex-1 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
-          </div>
-        </div>
-
-        <!-- 2. Vocal Cord Tension -->
-        <div class="flex flex-col gap-1">
-          <div class="flex justify-between text-slate-300">
-            <span>2. ความตึงของเส้นเสียง (Glottal Tension)</span>
-            <span class="text-slate-500 text-[11px]">(ผสม Triangle / Saw)</span>
-          </div>
-          <div class="flex items-center gap-3">
-            <span id="tensionVal" class="w-16 text-right font-mono font-bold text-cyan-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">35 %</span>
-            <input type="range" id="tensionSlider" min="0" max="100" step="1" value="35" oninput="updateParams()" class="flex-1 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
-          </div>
-        </div>
-
-        <!-- 3. Pharyngeal Narrowness (F1 Tongue Height) -->
-        <div class="flex flex-col gap-1">
-          <div class="flex justify-between text-slate-300">
-            <span>3. ระดับความสูงลิ้น / ความแคบคอ (F1 Formant)</span>
-            <span class="text-slate-500 text-[11px]">(เปิด-ปิดช่องคอ)</span>
-          </div>
-          <div class="flex items-center gap-3">
-            <span id="f1Val" class="w-16 text-right font-mono font-bold text-cyan-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">550 Hz</span>
-            <input type="range" id="f1Slider" min="250" max="950" step="10" value="550" oninput="updateParams()" class="flex-1 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
-          </div>
-        </div>
-
-        <!-- 4. Tongue Advancement (F2 Tongue Position) -->
-        <div class="flex flex-col gap-1">
-          <div class="flex justify-between text-slate-300">
-            <span>4. ตำแหน่งลิ้น หน้า-หลัง (F2 Formant)</span>
-            <span class="text-slate-500 text-[11px]">(หน้า/กลาง/หลัง)</span>
-          </div>
-          <div class="flex items-center gap-3">
-            <span id="f2Val" class="w-16 text-right font-mono font-bold text-cyan-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">850 Hz</span>
-            <input type="range" id="f2Slider" min="600" max="2500" step="20" value="850" oninput="updateParams()" class="flex-1 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
-          </div>
-        </div>
-
-        <!-- 5. Aspiration Noise (พ่นลม) -->
-        <div class="flex flex-col gap-1">
-          <div class="flex justify-between text-slate-300">
-            <span>5. การพ่นลม / ลมหายใจลอด (Breath Aspiration)</span>
-            <span class="text-slate-500 text-[11px]">(Pink/White Noise)</span>
-          </div>
-          <div class="flex items-center gap-3">
-            <span id="aspirationVal" class="w-16 text-right font-mono font-bold text-cyan-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">12 %</span>
-            <input type="range" id="aspirationSlider" min="0" max="50" step="1" value="12" oninput="updateParams()" class="flex-1 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
-          </div>
-        </div>
-
-        <!-- 6. Attack Duration -->
-        <div class="flex flex-col gap-1">
-          <div class="flex justify-between text-slate-300">
-            <span>6. ระยะเวลาพยัญชนะเริ่มต้น (Attack Time)</span>
-            <span class="text-slate-500 text-[11px]">(ขึ้นต้นพยางค์)</span>
-          </div>
-          <div class="flex items-center gap-3">
-            <span id="attackVal" class="w-16 text-right font-mono font-bold text-cyan-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">90 ms</span>
-            <input type="range" id="attackSlider" min="10" max="250" step="5" value="90" oninput="updateParams()" class="flex-1 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
-          </div>
-        </div>
-
-        <!-- 7. Release Duration -->
-        <div class="flex flex-col gap-1 md:col-span-2">
-          <div class="flex justify-between text-slate-300">
-            <span>7. ระยะเวลาทอดหางเสียงลงท้าย (Release Time)</span>
-            <span class="text-slate-500 text-[11px]">(หางเสียงวรรณยุกต์)</span>
-          </div>
-          <div class="flex items-center gap-3">
-            <span id="releaseVal" class="w-16 text-right font-mono font-bold text-cyan-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">550 ms</span>
-            <input type="range" id="releaseSlider" min="200" max="1000" step="20" value="550" oninput="updateParams()" class="flex-1 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-  </div>
+  <footer class="text-[11px] text-slate-600 text-center py-4">
+    © 2026 theloydas.com · Thai Phonetics & Articulatory Synthesizer
+  </footer>
 
   <script>
     const VF = Vex.Flow;
@@ -193,7 +213,6 @@
       "default": { f1: 550, f2: 850 }
     };
 
-    // อัตราส่วน Pitch Multiplier ของทั้ง 5 วรรณยุกต์เทียบกับค่า Base F0
     const TONE_RATIOS = [
       { name: "สามัญ", noteKey: "c/4", startR: 1.0, endR: 1.0 },
       { name: "เอก", noteKey: "b/3", startR: 0.943, endR: 0.841 },
@@ -201,8 +220,6 @@
       { name: "ตรี", noteKey: "g/4", startR: 1.498, endR: 1.498 },
       { name: "จัตวา", noteKey: "d/4", startR: 0.841, endR: 1.122 }
     ];
-
-    let currentAnalysis = null;
 
     let synthState = {
       f0: 261.6,
@@ -223,7 +240,6 @@
       synthState.attackTime = parseFloat(document.getElementById('attackSlider').value) / 1000;
       synthState.releaseTime = parseFloat(document.getElementById('releaseSlider').value) / 1000;
 
-      // อัปเดตตัวเลขหน้า Slider
       document.getElementById('f0Val').innerText = `${synthState.f0.toFixed(1)} Hz`;
       document.getElementById('tensionVal').innerText = `${(synthState.tension * 100).toFixed(0)} %`;
       document.getElementById('f1Val').innerText = `${synthState.f1.toFixed(0)} Hz`;
@@ -247,14 +263,13 @@
       updateParams();
     }
 
-    // ตรวจสอบว่าความถี่หลุดออกนอกช่วงมาตรฐานของบรรทัด 5 เส้น (G3 ถึง A5) หรือไม่
     function validateStaffRange() {
       const validatorBox = document.getElementById('validatorBox');
       const validatorIcon = document.getElementById('validatorIcon');
       const validatorMsg = document.getElementById('validatorMsg');
 
-      const minToleratedFreq = 196.0; // โน้ต G3 (ใต้เส้นล่างสุด)
-      const maxToleratedFreq = 440.0; // โน้ต A5 (เหนือเส้นบนสุด)
+      const minToleratedFreq = 196.0;
+      const maxToleratedFreq = 440.0;
 
       const minGenerated = synthState.f0 * 0.841;
       const maxGenerated = synthState.f0 * 1.498;
@@ -262,11 +277,11 @@
       if (maxGenerated > maxToleratedFreq) {
         validatorBox.className = "rounded-xl p-3 text-xs border flex items-center gap-2 bg-red-950/80 border-red-800 text-red-200";
         validatorIcon.innerText = "⚠️";
-        validatorMsg.innerHTML = `<strong>แจ้งเตือน:</strong> ความถี่สูงสุด (${maxGenerated.toFixed(1)} Hz ในเสียงตรี) <strong>เกินขอบเขตบน</strong> ของบรรทัด 5 เส้นมาตรฐาน (เกิน A5 > 440 Hz)`;
+        validatorMsg.innerHTML = `<strong>แจ้งเตือน:</strong> ความถี่สูงสุด (${maxGenerated.toFixed(1)} Hz) <strong>เกินขอบเขตบน</strong> ของบรรทัด 5 เส้น (> A5 / 440 Hz)`;
       } else if (minGenerated < minToleratedFreq) {
         validatorBox.className = "rounded-xl p-3 text-xs border flex items-center gap-2 bg-amber-950/80 border-amber-800 text-amber-200";
         validatorIcon.innerText = "⚠️";
-        validatorMsg.innerHTML = `<strong>แจ้งเตือน:</strong> ความถี่ต่ำสุด (${minGenerated.toFixed(1)} Hz ในเสียงเอก/จัตวา) <strong>ต่ำกว่าขอบเขตล่าง</strong> ของบรรทัด 5 เส้น (ต่ำกว่า G3 < 196 Hz)`;
+        validatorMsg.innerHTML = `<strong>แจ้งเตือน:</strong> ความถี่ต่ำสุด (${minGenerated.toFixed(1)} Hz) <strong>ต่ำกว่าขอบเขตล่าง</strong> ของบรรทัด 5 เส้น (< G3 / 196 Hz)`;
       } else {
         validatorBox.className = "rounded-xl p-3 text-xs border flex items-center gap-2 bg-slate-900 border-emerald-800 text-emerald-300";
         validatorIcon.innerText = "✅";
@@ -339,7 +354,7 @@
         const endF = synthState.f0 * tone.endR;
 
         const card = document.createElement("button");
-        card.className = "flex flex-col items-center justify-center p-2.5 bg-slate-950 border border-slate-800 hover:border-cyan-500 rounded-xl transition active:scale-95 text-center gap-1 shadow";
+        card.className = "flex flex-col items-center justify-center p-2.5 bg-slate-950/80 border border-slate-800 hover:border-cyan-500 rounded-xl transition active:scale-95 text-center gap-1 shadow";
         card.onclick = () => playArticulatoryTone(idx);
         card.innerHTML = `
           <span class="text-xs font-bold text-cyan-400">${tone.name}</span>
@@ -354,17 +369,12 @@
       const text = document.getElementById('textInput').value.trim();
       if (!text) return;
 
-      currentAnalysis = extractPhonetics(text);
-
-      document.getElementById('staffSection').classList.remove('hidden');
-      document.getElementById('toneGrid').classList.remove('hidden');
-
+      extractPhonetics(text);
       renderStaff5Tones();
       validateStaffRange();
       renderToneGrid();
     }
 
-    // Advanced Bio-Acoustic Synthesizer Engine
     function playArticulatoryTone(toneIndex, startTimeOffset = 0) {
       const tone = TONE_RATIOS[toneIndex];
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -374,7 +384,6 @@
       const startF = synthState.f0 * tone.startR;
       const endF = synthState.f0 * tone.endR;
 
-      // 1. Double Vocal Fold Oscillators (Sine + Sawtooth ตามความตึงของเส้นเสียง)
       const oscBody = audioCtx.createOscillator();
       const oscEdge = audioCtx.createOscillator();
       oscBody.type = 'sine';
@@ -385,7 +394,6 @@
         osc.frequency.exponentialRampToValueAtTime(endF, now + duration);
       });
 
-      // 2. Subtle Micro-Vibrato
       const lfo = audioCtx.createOscillator();
       const lfoGain = audioCtx.createGain();
       lfo.frequency.setValueAtTime(5.8, now);
@@ -393,7 +401,6 @@
       lfo.connect(oscBody.frequency);
       lfo.connect(oscEdge.frequency);
 
-      // 3. Glottal Tension Balancer
       const bodyGain = audioCtx.createGain();
       const edgeGain = audioCtx.createGain();
       bodyGain.gain.setValueAtTime(1.0 - synthState.tension * 0.7, now);
@@ -402,7 +409,6 @@
       oscBody.connect(bodyGain);
       oscEdge.connect(edgeGain);
 
-      // 4. Aspiration / Breath Noise Generator (การพ่นลม)
       const bufferSize = audioCtx.sampleRate * duration;
       const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
       const output = noiseBuffer.getChannelData(0);
@@ -423,7 +429,6 @@
       noiseNode.connect(noiseFilter);
       noiseFilter.connect(noiseGain);
 
-      // 5. Vocal Tract Formant Filters (F1 & F2 ปรับตามระดับลิ้นและความแคบคอ)
       const f1 = audioCtx.createBiquadFilter();
       f1.type = 'bandpass';
       f1.frequency.setValueAtTime(synthState.f1, now);
@@ -434,14 +439,12 @@
       f2.frequency.setValueAtTime(synthState.f2, now);
       f2.Q.setValueAtTime(6.0, now);
 
-      // 6. Master Envelope (Attack & Release)
       const masterGain = audioCtx.createGain();
       masterGain.gain.setValueAtTime(0.0001, now);
       masterGain.gain.exponentialRampToValueAtTime(0.35, now + synthState.attackTime);
       masterGain.gain.exponentialRampToValueAtTime(0.20, now + duration * 0.7);
       masterGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
-      // Routing
       bodyGain.connect(f1);
       bodyGain.connect(f2);
       edgeGain.connect(f1);
